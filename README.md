@@ -5,7 +5,7 @@ You can start and debug web api server using command line interface.
 # Installing - install akehoshi and required libraries
 ```
 $ pip --requirement requirements.txt
-$ sudo pip install .
+$ python setup.py install
 ```
 pip is pip3
 # How to Use
