@@ -37,10 +37,10 @@ class MotorController:
 
         self.worker = [None] * 2
         self.worker[self.ra] = threading.Thread\
-            (target=self.motor_mng_woker, args=[self.ra], kwargs={ "dry_run":dry_run })
+            (target=self.motor_mng_woker, args=[self.ra, dry_run])
         self.worker[self.ra].name = "RAMotorThread"
         self.worker[self.dec] = threading.Thread\
-            (target=self.motor_mng_woker, args=[self.dec], kwargs={ "dry_run":dry_run })
+            (target=self.motor_mng_woker, args=[self.dec, dry_run])
         self.worker[self.dec].name = "DECMotorThread"
 
         self.init_thread = [None] * 2
@@ -79,7 +79,7 @@ class MotorController:
     def __exit__(self):
         self.end()
 
-    def motor_mng_woker(self, axis, dry_run=False):
+    def motor_mng_woker(self, axis, dry_run):
         while not self.isKilled:
             received_action = self.actions_queue[axis].get()
             if received_action is None:
