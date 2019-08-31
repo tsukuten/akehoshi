@@ -23,19 +23,22 @@ class UnitController:
         self.north_board_addr = planetproj.planetproj.ADDR_LED_1
         self.south_board_addr = planetproj.planetproj.ADDR_LED_2
 
-        self.action_queue = [None] * 2
-        self.action_queue[self.north] = queue.Queue()
-        self.action_queue[self.south] = queue.Queue()
+        self.actions_queue = [None] * 2
+        self.actions_queue[self.north] = queue.Queue()
+        self.actions_queue[self.south] = queue.Queue()
 
         self.leds_num = 12
+        self.leds_range = [None] * 2
+        self.leds_range[self.north] = range(0,6)
+        self.leds_range[self.south] = range(6,12)
         self.isKilled = False
 
         self.init_thread = [None] * 2
         self.init_thread[self.north] = threading.Thread\
-            (target=self.init_unit, args=[self.nort], kwargs={"dry_run":dry_run})
+            (target=self.init_manager, args=[self.north, dry_run])
         self.init_thread[self.north].name = "NorthUnitInitThread"
         self.init_thread[self.south] = threading.Thread \
-            (target=self.init_unit, args=[self.south], kwargs={"dry_run":dry_run})
+            (target=self.init_manager, args=[self.south, dry_run])
         self.init_thread[self.south].name = "SouthUnitInitThread"
 
         self.worker = [None] * 2
@@ -45,6 +48,8 @@ class UnitController:
         self.worker[self.south] = threading.Thread \
             (target=self.unit_mng_worker, args=[self.south, dry_run])
         self.worker[self.south].name = "SouthUnitThread"
+
+        self.unit_manager = [None] * 2
 
 
     def start(self):
@@ -73,12 +78,14 @@ class UnitController:
     def __exit__(self):
         self.end()
 
-    def unit_mng_woker(self, axis, dry_run):
+    def unit_mng_worker(self, axis, dry_run):
         while not self.isKilled:
+            logger.info("queue is ready")
             received_action = self.actions_queue[axis].get()
             if received_action is None:
                 logger.info("close worker")
                 break;
+            logger.info('running' + str(received_action[0]) + ' args: ' + str(received_action[1]))
             received_action[0](*received_action[1])
             self.actions_queue[axis].task_done()
 
@@ -88,7 +95,7 @@ class UnitController:
                 addrs = [self.north_board_addr, self.south_board_addr],
                 num_leds_per_dev = 6,
                 dry_run=dry_run)
-            manager._init_unit(manager, axis)
+            self._init_unit(manager, axis)
             self.unit_manager[axis] = manager
         except FileNotFoundError as e:
             logger.error('i2c is not connected')
@@ -99,14 +106,22 @@ class UnitController:
     def _init_unit(self, manager, axis):
         logger.info('initilize unit')
         self.change_state(axis, 'try-init')
-        manager.set_brightness_multi([0,0,0,0,0,0])
+
+        manager.set_brightness_multi([(i, 0) for i in self.leds_range[axis]])
         self.change_state(axis, 'initialized')
 
     def _set_brightness_multi(self, ary):
-        self.leds.set_brightness_multi(ary)
+        north_value = [ (item[0], item[1]) for item in ary if item[0] < 6]
+        south_value = [ (item[0], item[1]) for item in ary if item[0] >= 6]
+        if len(north_value) > 0:
+            logger.debug(north_value)
+            self.actions_queue[self.north].put((self.unit_manager[self.north].set_brightness_multi, [north_value]))
+        if len(south_value) > 0:
+            logger.debug(south_value)
+            self.actions_queue[self.south].put((self.unit_manager[self.south].set_brightness_multi, [south_value]))
+        # self.leds.set_brightness_multi(ary)
 
     def set_brightness(self, ledid, brightness):
-        self.change_state('active')
         try:
             n = int(ledid)
             b = float(brightness)
@@ -123,9 +138,7 @@ class UnitController:
             return (ledid, None, e);
         except ValueError:
             raise
-        res = self.leds.get_brightness(n)
-        self.change_state('non-active')
-        return (ledid, res, None)
+        return (ledid, '', None)
 
     def get_brightness(self, ledid):
         self.change_state('active')
@@ -133,13 +146,9 @@ class UnitController:
         self.change_state('non-active')
         return (ledid, b)
 
-    def set_multi_brightness(self, brightness_dict):
-        send_array = []
-        for ledid in brightness_dict.keys():
-                (l, b, e) = self.set_brightness(ledid, brightness_dict[ledid])
-                # send_dict[str(l)] = (b, e)
-                send_array.append((l, b, e))
-        return send_array
+    def set_multi_brightness(self, brightness_ary):
+        self._set_brightness_multi(brightness_ary)
+        return [(0,0,0)]
 
     def get_all_brightness(self):
         result_dict = {}
@@ -160,3 +169,13 @@ class UnitController:
             error_message = ' {} in shutdown'.format(e.message)
             raise ValueError(error_message)
         self.change_state('exited')
+
+if __name__ == '__main__':
+    import time
+
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(asctime)s:%(threadName)s:%(name)s:%(levelname)s:%(message)s')
+    m = UnitController(dry_run=True)
+    m.start()
+    m.set_multi_brightness([(i,0.5) for i in range(0,12)])
+    m.end()
