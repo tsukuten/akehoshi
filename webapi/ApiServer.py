@@ -2,9 +2,9 @@ import sys,os
 
 from flask import Flask, jsonify, abort, make_response,request
 from flask_cors import CORS
-import logging
 from math import pi
 import json
+import threading
 
 from MotorController import MotorController
 from UnitController import UnitController
@@ -15,6 +15,8 @@ api = Flask(__name__)
 api.interface_error = [ValueError, TypeError]
 CORS(api)
 
+import logging
+logger = logging.getLogger(__name__)
 
 unit = None
 motor = None
@@ -119,6 +121,14 @@ def notfound_handler(a):
 def run(host, port, dry_run=False):
     print('run')
     global unit
-    unit = UnitController(dry_run=dry_run)
-    # motor = MotorController(dry_run=dry_run)
-    api.run(host=host, port=port)
+    global motor
+    # unit = UnitController(dry_run=dry_run)
+    motor = MotorController(dry_run=dry_run)
+    motor.start()
+
+    logger.info("running webapi")
+    # api.run(host=host, port=port)
+
+def kill():
+    if motor:
+        motor.end()
