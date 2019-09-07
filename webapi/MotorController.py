@@ -21,9 +21,9 @@ class MotorController:
             sys.exit()
         except Exception as e:
             raise
-        self.ra = 0 #Rgiht Ascension(赤経)
+        self.ra = 1 #Rgiht Ascension(赤経)
         self.ra_range = (-2*pi, 2*pi)
-        self.dec = 1 #DEClination(赤緯)
+        self.dec = 0 #DEClination(赤緯)
         self.dec_range = (-pi, pi)
         logger.info('ra port:{} range:{}'.format(self.ra, self.ra_range))
         logger.info('dec port:{} range:{}'.format(self.dec, self.dec_range))
