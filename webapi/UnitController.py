@@ -34,19 +34,15 @@ class UnitController:
         self.isKilled = False
 
         self.init_thread = [None] * 2
-        self.init_thread[self.north] = threading.Thread\
-            (target=self.init_manager, args=[self.north, dry_run])
+        self.init_thread[self.north] = threading.Thread(target=self.init_manager, args=[self.north, dry_run])
         self.init_thread[self.north].name = "NorthUnitInitThread"
-        self.init_thread[self.south] = threading.Thread \
-            (target=self.init_manager, args=[self.south, dry_run])
+        self.init_thread[self.south] = threading.Thread(target=self.init_manager, args=[self.south, dry_run])
         self.init_thread[self.south].name = "SouthUnitInitThread"
 
         self.worker = [None] * 2
-        self.worker[self.north] = threading.Thread\
-            (target=self.unit_mng_worker, args=[self.north, dry_run])
+        self.worker[self.north] = threading.Thread(target=self.unit_mng_worker, args=[self.north, dry_run])
         self.worker[self.north].name = "NorthUnitThread"
-        self.worker[self.south] = threading.Thread \
-            (target=self.unit_mng_worker, args=[self.south, dry_run])
+        self.worker[self.south] = threading.Thread(target=self.unit_mng_worker, args=[self.south, dry_run])
         self.worker[self.south].name = "SouthUnitThread"
 
         self.unit_manager = [None] * 2
@@ -126,7 +122,7 @@ class UnitController:
             n = int(ledid)
             b = float(brightness)
         except TypeError:
-            e = 'ledid(={}) and brightness(={}) is expected int or float'.format(type(ledid), type(b))
+            e = 'ledid(={}) and brightness(={}) is expected int or float'.format(type(ledid), type(brightness))
             logger.error(e)
             return (ledid, None, e);
 

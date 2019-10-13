@@ -1,6 +1,6 @@
 import sys,os
 
-from flask import Flask, jsonify, abort, make_response,request
+from flask import Flask, jsonify, abort, make_response, request
 from flask_cors import CORS
 from math import pi
 import json
@@ -68,8 +68,9 @@ def set_leds_all():
     print(request.data)
     print(json.loads(request.data.decode('utf-8')))
     obj = json.loads(request.data.decode('utf-8'))
-    result_array = unit.set_multi_brightness(obj['brightness'])
-    error_array = { res[0]:res[2] for res in result_array }
+    brightness_array = [(int(ledid), float(0.8)) for ledid in obj['brightness']]
+    result_array = unit.set_multi_brightness(brightness_array)
+    error_array = {res[0]:res[2] for res in result_array }
     result = {
         "result" : True,
         "brightness": { res[0]:res[1] for res in result_array },
@@ -83,7 +84,7 @@ def set_ra():
     if request.headers['Content-Type'] != 'application/json':
         return (jsonify(error=True, mes='Content-Type is not match, expected \'application/json\'({})'.format(request.headers['Content-Type'])), 400)
     print('ra_pos = {}'.format(request.data))
-    data = json.loads(request.data.decode('utf-8'));
+    data = json.loads(request.data.decode('utf-8'))
     ra_pos = motor.move_ra_absolute(data["position"])
     result = {
         "result" : True,
@@ -96,10 +97,10 @@ def set_dec():
     global motor
     if request.headers['Content-Type'] != 'application/json':
         return (jsonify(error=True, mes='Content-Type is not match, expected \'application/json\'({})'.format(request.headers['Content-Type'])), 400)
-    data = json.loads(request.data.decode('utf-8'));
+    data = json.loads(request.data.decode('utf-8'))
     dec_pos = motor.move_dec_absolute(data["position"])
     result = {
-        "result" : True,
+        "result": True,
         "position": data["position"]
     }
     return jsonify(result)
@@ -122,12 +123,13 @@ def run(host, port, dry_run=False):
     print('run')
     global unit
     global motor
-    # unit = UnitController(dry_run=dry_run)
+    unit = UnitController(dry_run=dry_run)
     motor = MotorController(dry_run=dry_run)
+    unit.start()
     motor.start()
 
     logger.info("running webapi")
-    # api.run(host=host, port=port)
+    api.run(host=host, port=port)
 
 def kill():
     if motor:
