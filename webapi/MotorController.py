@@ -103,6 +103,8 @@ class MotorController:
         logger.info('initialize motor')
         self.change_state(axis, 'try-init')
         manager.set_power(axis, power)
+        if axis == self.ra:
+            manager.set_max_idx(axis, 850)
         logger.info('set_power: {}'.format(power))
         manager.set_zero_position(axis)
         self.change_state(axis, 'initialized')
