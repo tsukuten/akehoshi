@@ -80,7 +80,7 @@ class UnitController:
             received_action = self.actions_queue[axis].get()
             if received_action is None:
                 logger.info("close worker")
-                break;
+                break
             logger.info('running' + str(received_action[0]) + ' args: ' + str(received_action[1]))
             received_action[0](*received_action[1])
             self.actions_queue[axis].task_done()
@@ -124,14 +124,14 @@ class UnitController:
         except TypeError:
             e = 'ledid(={}) and brightness(={}) is expected int or float'.format(type(ledid), type(brightness))
             logger.error(e)
-            return (ledid, None, e);
+            return (ledid, None, e)
 
         try:
             self._set_brightness_multi([(n, b)])
         except OSError as error:
             e = 'cannot write devices'
             logger.error(e)
-            return (ledid, None, e);
+            return (ledid, None, e)
         except ValueError:
             raise
         return (ledid, '', None)

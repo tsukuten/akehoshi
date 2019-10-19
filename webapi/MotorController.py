@@ -84,7 +84,7 @@ class MotorController:
             received_action = self.actions_queue[axis].get()
             if received_action is None:
                 logger.info("close worker")
-                break;
+                break
             received_action[0](*received_action[1])
             self.actions_queue[axis].task_done()
 
