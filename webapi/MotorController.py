@@ -18,8 +18,8 @@ class MotorController:
 
         self.isKilled = False
 
-        self.ra  = 0 #Rgiht Ascension(赤経)
-        self.dec = 1 #DEClination(赤緯)
+        self.ra  = 1 #Rgiht Ascension(赤経)
+        self.dec = 0 #DEClination(赤緯)
 
         self.state = [None] * 2
         self.range = [None] * 2
